@@ -1,111 +1,115 @@
-# SQL COM TODOS OS PAÍSES (BACEN) + TODOS OS ESTADOS E CIDADES DO BRASIL (IBGE)
+# Cities API
 
-SQL de todos os __Países e Nações__ (c/ Código do Portal do Comércio Exterior ou BACEN) + __Estados e Federações Brasileiras__ (c/ DDD e Código do IBGE) + __Cidades e Municípios Brasileiros__ (c/ Código do IBGE), incluindo as 31 regiões administrativas do DF, Ilhas e Áreas Remotas do Mundo.
+## Requirements
 
-> Obs.: A tabela de Países está sofrendo atualizações na coluna do Código BACEN, priorizando o código do País através da tabela de países do **Portal do Comércio Exterior**, sendo assim em alguns casos o código **BACEN** do País está recebendo o Código do Portal de Comércio Exterior, levando em consideração que a Receita Federal está exigindo essa tabela em relação ao BACEN em seus documentos fiscais. Vide Nota Técnica 2018.003 no portal da nota fiscal eletrônica.
+* Linux
+* Git
+* Java 8
+* Docker
+* IntelliJ Community
+* Heroku CLI
 
-*Arquivos separados por tipo de ___SGBD___ em Pastas.
+## DataBase
 
-*Arquivos separados por tabela.
+### Postgres
 
-*Em breve irei incluir estados e cidades estrangeiras.
+* [Postgres Docker Hub](https://hub.docker.com/_/postgres)
 
-*Em breve irei incluir informações sobre latitude e longitude de cidades brasileiras.
-
-## Como Instalar
-
-Basta importar o arquivo SQL referente ao seu SGBD ou copie e cole o conteúdo dos arquivos SQL para o executor de queries do seu SGBD.
-
-## Como Atualizar
-
-Bem simples, como os arquivos SQL possui comandos de exclusão da tabela antes da criação e inserção de registros, desde que sua aplicação faça uso das tabelas da forma original igual é disponibilizado aqui, basta importar os arquivos SQL referente ao seu SGBD ou copie e cole o conteúdo dos arquivos SQL para o executor de queries do seu SGBD, isso fará com que suas tabelas sejam removidas e criadas novamente com todos os dados atualizados.
-
-## Dicas e Sugestões de Uso
-
-*Todos os Estados/Distritos e Cidades/Municípios Brasileiros possui um código único de identificação do IBGE, porem nem todos os Países e Nações do mundo possui um código único de identificação do BACEN, devido ao BACEN só catalogar Países dos quais ele possui ligação financeira (Agencias Bancarias ou Correspondente bancário), geralmente esses países (ou espaços governados por outras nações) são ilhas inabitadas ou regiões inabitadas próximas das Antártida, não se preocupe com isso, provavelmente sua aplicação nunca irá precisar utilizar essa localização.
-
-*A tabela de 'pais' possui todos os Países e Nações possíveis com ou sem Sigla, ~~com ou sem Código do BACEN~~, com Nome Original e Nome Traduzido para o Português.
-
-## Validações
-
-### Validação do Código de Município
-
-O Código de Município do IBGE tem a composição que segue:
-
-- Composição: UUNNNND
-  Onde:
-  UU = Código da UF do IBGE
-  NNNN = Número de ordem dentro da UF;
-  D = Dígito de Controle módulo 10
-
-Validação possível:
-
-- Extensão máxima: 7 dígitos;
-- Extensão mínima: 7 dígitos;
-- Código da UF: deve ser válido, conforme Tabela de UF do IBGE;
-- Número de ordem dentro da UF: não pode ser zero;
-- Dígito de Controle: módulo 10 (pesos 2 e 1)
-
-Obs 1: Considerar a soma dos algarismos no somatório dos produtos dos pesos. Ou seja, se o produto for superior a 9 os dois algarismos devem ser somados.
-
-Obs 2: Se o resto da divisão for zero, considerar o dígito verificador igual a zero.
-
-O código de Município do IBGE dos seguintes Municípios tem o DV - dígito verificador inválido:
-
-```txt
-4305871 - Coronel Barros/RS;
-2201919 - Bom Princípio do Piauí/PI;
-2202251 - Canavieira /PI;
-2201988 - Brejo do Piauí/PI;
-2611533 - Quixaba/PE;
-3117836 - Cônego Marinho/MG;
-3152131 - Ponto Chique/MG;
-5203939 - Buriti de Goiás/GO;
-5203962 - Buritinópolis/GO;
+```shell script
+docker run --name cities-db -d -p 5432:5432 -e POSTGRES_USER=postgres_user_city -e POSTGRES_PASSWORD=super_password -e POSTGRES_DB=cities postgres
 ```
 
-### Validação do Código de Município - **Código TOM**
-O campo **Código TOM** possui 4 dígitos e se refere ao código usado para tratamento de arquivos da Receita da Federal do Brasil (**RFB**) ou Secretarias da Fazenda (**SEFAZ**).
-Arquivos do SIMPLES NACIONAL como PGDASD, DAF607 entre outros usam essa codificação.
+### Populate
 
-Os dados foram extraídos do portal da SEFAZ MG:
-[http://www.fazenda.mg.gov.br/governo/assuntos_municipais/codigomunicipio/](http://www.fazenda.mg.gov.br/governo/assuntos_municipais/codigomunicipio/)
+* [data](https://github.com/chinnonsantos/sql-paises-estados-cidades/tree/master/PostgreSQL)
 
-> Atualmente disponível somente para **PostgreSQL**, estamos replicando a informação para outros SGDB do projeto...
+```shell script
+cd ~/workspace/sql-paises-estados-cidades/PostgreSQL
 
-### Validação do Código de País
+docker run -it --rm --net=host -v $PWD:/tmp postgres /bin/bash
 
-Composição do Código de País:
+psql -h localhost -U postgres_user_city cities -f /tmp/pais.sql
+psql -h localhost -U postgres_user_city cities -f /tmp/estado.sql
+psql -h localhost -U postgres_user_city cities -f /tmp/cidade.sql
 
-- NNND
-  Onde:
-  NNN = Número de ordem do Código do País;
-  D = Dígito de Controle módulo 11.
+psql -h localhost -U postgres_user_city cities
 
-Validação possível:
-
-- Extensão máxima: 4 dígitos;
-- Extensão mínima: 2 dígitos;
-- Dígito de Controle: módulo 11, pesos 2 a 9
-
-Obs.: Se o resto da divisão for zero ou 1, considerar o dígito verificador igual a zero.
-
-O código de País do BACEN dos seguintes países tem o DV - dígito verificador inválido:
-
-```txt
-1504 - GUERNSEY, ILHA DO CANAL (INCLUI ALDERNEY E SARK);
-1508 - JERSEY, ILHA DO CANAL;
-3595 - MAN, ILHA DE;
-4985 - MONTENEGRO;
-6781 - SAINT KITTS E NEVIS;
-7370 - SERVIA;
+CREATE EXTENSION cube; 
+CREATE EXTENSION earthdistance;
 ```
 
-## Fontes
+* [Postgres Earth distance](https://www.postgresql.org/docs/current/earthdistance.html)
+* [earthdistance--1.0--1.1.sql](https://github.com/postgres/postgres/blob/master/contrib/earthdistance/earthdistance--1.0--1.1.sql)
+* [OPERATOR <@>](https://github.com/postgres/postgres/blob/master/contrib/earthdistance/earthdistance--1.1.sql)
+* [postgrescheatsheet](https://postgrescheatsheet.com/#/tables)
+* [datatype-geometric](https://www.postgresql.org/docs/current/datatype-geometric.html)
 
-- [Tabela de Países do Portal do Comércio Exterior (atualizada em 12/04/2019)](http://www.nfe.fazenda.gov.br/portal/exibirArquivo.aspx?conteudo=FOXZNFX/p50=)
-- [Códigos BACEN](http://www.bcb.gov.br/rex/Censo2000/port/manual/pais.asp?idpai=censo2000inf)
-- [Instruções de Preenchimento do Banco Central do Brasil - Março de 2016 - PDF](http://www.bcb.gov.br/fis/pstaw10/DLO_2061_e_2071_instrucoesComplementares_ACP_v201603.pdf)
-- [Áreas dos Municípios do Brasil (vigente em 30/04/2018)](https://www.ibge.gov.br/geociencias/organizacao-do-territorio/estrutura-territorial/15761-areas-dos-municipios.html?=&t=o-que-e)
-- [Código IBGE das Unidade da Federação e Municípios do Brasil - 2018 - XLS](//geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/areas_territoriais/2018/AR_BR_RG_UF_MES_MIC_MUN_2018.xls)
-- [Panorama IBGE dos Municípios do Brasil](https://cidades.ibge.gov.br/brasil/go/goiania/panorama)
+### Access
+
+```shell script
+docker exec -it cities-db /bin/bash
+
+psql -U postgres_user_city cities
+```
+
+### Query Earth Distance
+
+Point
+```roomsql
+select ((select lat_lon from cidade where id = 4929) <@> (select lat_lon from cidade where id=5254)) as distance;
+```
+
+Cube
+```roomsql
+select earth_distance(
+    ll_to_earth(-21.95840072631836,-47.98820114135742), 
+    ll_to_earth(-22.01740074157715,-47.88600158691406)
+) as distance;
+```
+
+## Spring Boot
+
+* [https://start.spring.io/](https://start.spring.io/)
+
++ Java 8
++ Gradle Project
++ Jar
++ Spring Web
++ Spring Data JPA
++ PostgreSQL Driver
+
+### Spring Data
+
+* [jpa.query-methods](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods)
+
+### Properties
+
+* [appendix-application-properties](https://docs.spring.io/spring-boot/docs/current/reference/html/appendix-application-properties.html)
+* [jdbc-database-connectio](https://www.codejava.net/java-se/jdbc/jdbc-database-connection-url-for-common-databases)
+
+### Types
+
+* [JsonTypes](https://github.com/vladmihalcea/hibernate-types)
+* [UserType](https://docs.jboss.org/hibernate/orm/3.5/api/org/hibernate/usertype/UserType.html)
+
+## Heroku
+
+* [DevCenter](https://devcenter.heroku.com/articles/getting-started-with-gradle-on-heroku)
+
+## Code Quality
+
+### PMD
+
++ https://pmd.github.io/pmd-6.8.0/index.html
+
+### Checkstyle
+
++ https://checkstyle.org/
+
++ https://checkstyle.org/google_style.html
+
++ http://google.github.io/styleguide/javaguide.html
+
+```shell script
+wget https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml
+```
