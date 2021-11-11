@@ -1,7 +1,7 @@
-package com.github.RodrigoAguiarS.citiesapi;
+package com.github.RodrigoAguiarS.citiesapi.countries;
 
 import com.github.RodrigoAguiarS.citiesapi.countries.Country;
-import com.github.RodrigoAguiarS.citiesapi.repository.CountryRepository;
+import com.github.RodrigoAguiarS.citiesapi.countries.repository.CountryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
